@@ -8,7 +8,7 @@ Here is a simple config of a service for `echo` command:
 ```yaml
 - url: /echo
   args:
-    - {name: message}
+    - name: message
   command: /bin/echo %message%
 ```
 
