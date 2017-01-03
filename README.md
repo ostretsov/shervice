@@ -6,10 +6,11 @@ shervice makes any shell command as a RESTful HTTP service in a minute.
 Here is a simple config of a service for `echo` command:
 
 ```yaml
-- url: /echo
-  args:
-    - name: message
-  command: /bin/echo %message%
+services:
+  - url: /echo
+    args:
+      - name: message
+    command: /bin/echo %message%
 ```
 
 * raw

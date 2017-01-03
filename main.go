@@ -4,7 +4,17 @@ import (
 	"fmt"
 	"github.com/olebedev/config"
 	"io/ioutil"
+	"net/http"
 )
+
+func handler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "echo is called: %s", r.URL.Path[1:])
+}
+
+func startServer() {
+	http.HandleFunc("/echo", handler)
+	http.ListenAndServe(":8080", nil)
+}
 
 func main() {
 	configFile := "./config/shervice.yaml"
@@ -23,4 +33,6 @@ func main() {
 	}
 
 	fmt.Println(value)
+
+	startServer()
 }

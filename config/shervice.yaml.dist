@@ -1,5 +1,5 @@
 services:
-  - url: '/echo'
-    arguments:
-      - {name: message, type: string, raw: false}
-    command: '/bin/echo %message%'
+  - url: /echo
+    args:
+      - name: message
+    command: /bin/echo %message%
