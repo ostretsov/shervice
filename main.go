@@ -5,6 +5,8 @@ import (
 	"github.com/olebedev/config"
 	"io/ioutil"
 	"net/http"
+	"os/exec"
+	"log"
 )
 
 func loadConfig(configFile string) (string, error) {
@@ -21,11 +23,16 @@ func loadConfig(configFile string) (string, error) {
 		return "", err
 	}
 
-	return value, err;
+	return value, err
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "echo is called: %s", r.URL.Path[1:])
+	cmd := exec.Command("/bin/echo", "wow")
+	out, err := cmd.Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Fprint(w, string(out))
 }
 
 func startServer() {
