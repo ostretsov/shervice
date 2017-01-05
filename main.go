@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os/exec"
 	"log"
+	"os"
+	"strings"
 )
 
 func loadConfig(configFile string) (string, error) {
@@ -37,14 +39,31 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 func startServer() {
 	http.HandleFunc("/echo", handler)
-	err := http.ListenAndServe(":8080", nil)
+	err := http.ListenAndServe(":8090", nil)
 	if nil != err {
 		fmt.Println(err)
 	}
 }
 
+func getConfigFilePath() string {
+	path := os.Getenv("SHERVICE_CONFIG")
+	if len(path) > 0 {
+		return path
+	}
+
+	dir, err := os.Getwd()
+	if nil != err {
+		log.Fatal("Can not reach current working directory")
+	}
+
+	p := []string{dir, "/shervice.yaml"}
+
+	return strings.Join(p, "")
+}
+
 func main() {
-	configFile := "./config/shervice.yaml"
+	configFile := getConfigFilePath()
+	log.Printf("Config file %s", configFile)
 	value, err := loadConfig(configFile)
 	if nil != err {
 		fmt.Println(err)

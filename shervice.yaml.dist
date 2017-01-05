@@ -1,0 +1,5 @@
+services:
+  - url: /echo
+    args:
+      - name: message
+    command: /bin/echo %message%
