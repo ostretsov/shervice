@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/olebedev/config"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"net/http"
 	"os/exec"
@@ -11,21 +11,29 @@ import (
 	"strings"
 )
 
-func loadConfig(configFile string) (string, error) {
+type Config struct {
+	Services [] struct {
+		Url string
+		Args [] struct {
+			Name string
+		}
+		Command string
+	}
+}
+
+func loadConfig(configFile string) Config {
 	configData, err := ioutil.ReadFile(configFile)
 	if nil != err {
-		return "", err
-	}
-	appConfig, err := config.ParseYaml(string(configData))
-	if nil != err {
-		return "", err
-	}
-	value, err := appConfig.String("services.0.url")
-	if nil != err {
-		return "", err
+		log.Fatalf("Can't open file %s", configFile)
 	}
 
-	return value, err
+	c := Config{}
+	err = yaml.Unmarshal(configData, &c)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return c
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -64,12 +72,9 @@ func getConfigFilePath() string {
 func main() {
 	configFile := getConfigFilePath()
 	log.Printf("Config file %s", configFile)
-	value, err := loadConfig(configFile)
-	if nil != err {
-		fmt.Println(err)
-	}
+	c := loadConfig(configFile)
 
-	fmt.Println(value)
+	fmt.Println(c.Services[0].Url)
 
 	startServer()
 }
