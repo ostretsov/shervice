@@ -12,6 +12,7 @@ import (
 )
 
 type Config struct {
+	Port string
 	Services [] struct {
 		Url string
 		Args [] struct {
@@ -21,13 +22,39 @@ type Config struct {
 	}
 }
 
+func newConfig() Config {
+	c := Config{}
+	c.Port = "8090"
+
+	return c
+}
+
+func startServer(c Config) {
+	for _, service := range c.Services {
+		http.HandleFunc(service.Url, func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprint(w, service.Url)
+
+			cmd := exec.Command("/bin/echo", "wow")
+			out, err := cmd.Output()
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Fprint(w, string(out))
+		})
+	}
+	err := http.ListenAndServe(strings.Join([]string{":", c.Port}, ""), nil)
+	if nil != err {
+		log.Fatal(err)
+	}
+}
+
 func loadConfig(configFile string) Config {
 	configData, err := ioutil.ReadFile(configFile)
 	if nil != err {
-		log.Fatalf("Can't open file %s", configFile)
+		log.Fatalf("Can't read file %s", configFile)
 	}
 
-	c := Config{}
+	c := newConfig()
 	err = yaml.Unmarshal(configData, &c)
 	if err != nil {
 		log.Fatal(err)
@@ -36,26 +63,13 @@ func loadConfig(configFile string) Config {
 	return c
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
-	cmd := exec.Command("/bin/echo", "wow")
-	out, err := cmd.Output()
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Fprint(w, string(out))
-}
-
-func startServer() {
-	http.HandleFunc("/echo", handler)
-	err := http.ListenAndServe(":8090", nil)
-	if nil != err {
-		fmt.Println(err)
-	}
-}
-
 func getConfigFilePath() string {
 	path := os.Getenv("SHERVICE_CONFIG")
 	if len(path) > 0 {
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			log.Fatalf("File %s does not exist!", path)
+		}
+
 		return path
 	}
 
@@ -64,17 +78,17 @@ func getConfigFilePath() string {
 		log.Fatal("Can not reach current working directory")
 	}
 
-	p := []string{dir, "/shervice.yaml"}
+	path = strings.Join([]string{dir, "/shervice.yaml"}, "")
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		log.Fatalf("File %s does not exist!", path)
+	}
 
-	return strings.Join(p, "")
+	return path
 }
 
 func main() {
 	configFile := getConfigFilePath()
 	log.Printf("Config file %s", configFile)
 	c := loadConfig(configFile)
-
-	fmt.Println(c.Services[0].Url)
-
-	startServer()
+	startServer(c)
 }
